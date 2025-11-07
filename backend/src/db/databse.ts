@@ -4,7 +4,6 @@ import { db_url } from "../config";
 class DataBase {
   private static uri: string = db_url;
   public static connect() {
-    console.log("URL-->", this.uri)
     mongoose.set("strictQuery", true);
     mongoose
       .connect(this.uri)
