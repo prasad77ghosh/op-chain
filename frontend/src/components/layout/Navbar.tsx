@@ -26,13 +26,6 @@ export const Navbar = () => {
               <span className="text-sm text-gray-700 mr-2">
                 Hi, {user.name}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/profile")}
-              >
-                Profile
-              </Button>
               <Button size="sm" onClick={handleLogout}>
                 Logout
               </Button>

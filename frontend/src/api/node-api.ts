@@ -19,7 +19,7 @@ export const api = {
     return response.data;
   },
 
-  getReplies: async (parentId: string, cursor?: string, limit = 1) => {
+  getReplies: async (parentId: string, cursor?: string, limit = 10) => {
     const params = new URLSearchParams();
     if (cursor) params.append("cursor", cursor);
     params.append("limit", limit.toString());

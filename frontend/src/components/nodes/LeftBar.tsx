@@ -68,13 +68,11 @@ const LeftBar = ({ roots }: { roots: Root[] }) => {
   return (
     <div className="lg:col-span-1">
       <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-20">
-        {/* Header */}
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-gray-600" />
           <h2 className="text-lg font-semibold text-gray-800">Discussions</h2>
         </div>
 
-        {/* Scrollable list */}
         <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
           {roots.map((root, index) => (
             <div
@@ -85,14 +83,12 @@ const LeftBar = ({ roots }: { roots: Root[] }) => {
             </div>
           ))}
 
-          {/* Loading spinner */}
           {loadingRoots && (
             <div className="flex justify-center py-4">
               <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
             </div>
           )}
 
-          {/* No more items */}
           {!hasMoreRoots && roots.length > 0 && (
             <div className="text-center text-sm text-gray-500 py-2">
               No more discussions

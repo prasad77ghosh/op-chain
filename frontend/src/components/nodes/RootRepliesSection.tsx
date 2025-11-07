@@ -19,7 +19,6 @@ const RootRepliesSection: React.FC<Props> = ({ onReply }) => {
   } = useTreeStore();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const observer = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef(false);
 
   const rootId = selectedRoot?._id;
@@ -31,16 +30,14 @@ const RootRepliesSection: React.FC<Props> = ({ onReply }) => {
   /** Load initial replies */
   const loadReplies = useCallback(async () => {
     if (!selectedRoot || loadingRef.current) return;
-    
     loadingRef.current = true;
     useTreeStore.getState().setLoadingReplies(selectedRoot._id, true);
-    
+
     try {
-      const data = await api.getReplies(selectedRoot._id, undefined, 10);
-      
+      const data = await api.getReplies(selectedRoot._id, undefined);
       useTreeStore.getState().setNodeReplies(
         selectedRoot._id,
-        data.replies, // Backend already returns oldest → newest
+        data.replies,
         data.nextCursor,
         data.hasMore
       );
@@ -52,19 +49,18 @@ const RootRepliesSection: React.FC<Props> = ({ onReply }) => {
     }
   }, [selectedRoot?._id]);
 
-  /** Load more replies (infinite scroll) */
+  /** Load more replies on scroll bottom */
   const loadMoreReplies = useCallback(async () => {
     if (!selectedRoot || !hasMore || loadingRef.current || !cursor) return;
-    
+
     loadingRef.current = true;
     useTreeStore.getState().setLoadingReplies(selectedRoot._id, true);
-    
+
     try {
-      const data = await api.getReplies(selectedRoot._id, cursor, 10);
-      
+      const data = await api.getReplies(selectedRoot._id, cursor);
       useTreeStore.getState().addNodeReplies(
         selectedRoot._id,
-        data.replies, // Backend already returns oldest → newest
+        data.replies,
         data.nextCursor,
         data.hasMore
       );
@@ -76,29 +72,24 @@ const RootRepliesSection: React.FC<Props> = ({ onReply }) => {
     }
   }, [selectedRoot?._id, hasMore, cursor]);
 
-  /** Infinite scroll observer */
-  const lastReplyRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (loadingRef.current) return;
-      if (observer.current) observer.current.disconnect();
+  /** Check scroll position to trigger loading */
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current || loadingRef.current || !hasMore) return;
 
-      observer.current = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && hasMore && !loadingRef.current) {
-            loadMoreReplies();
-          }
-        },
-        { 
-          root: containerRef.current, 
-          threshold: 0.8,
-          rootMargin: '100px'
-        }
-      );
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+    const isBottom = scrollTop + clientHeight >= scrollHeight - 50; // 50px threshold
 
-      if (node) observer.current.observe(node);
-    },
-    [hasMore, loadMoreReplies]
-  );
+    if (isBottom && !loadingRef.current) {
+      loadMoreReplies();
+    }
+  }, [hasMore, loadMoreReplies]);
+
+  /** Attach scroll listener */
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) container.addEventListener("scroll", handleScroll);
+    return () => container?.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   /** Initial load */
   useEffect(() => {
@@ -108,19 +99,13 @@ const RootRepliesSection: React.FC<Props> = ({ onReply }) => {
     }
   }, [selectedRoot?._id, loadReplies]);
 
-  /** Cleanup observer */
-  useEffect(() => {
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, []);
-
   if (!selectedRoot) return null;
 
   return (
-    <div ref={containerRef} className="space-y-2">
+    <div
+      ref={containerRef}
+      className="h-full max-h-[calc(100vh-150px)] overflow-y-auto space-y-2 p-2"
+    >
       {loading && replies.length === 0 && (
         <div className="flex justify-center py-4">
           <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
@@ -129,11 +114,8 @@ const RootRepliesSection: React.FC<Props> = ({ onReply }) => {
 
       {replies.length > 0 && (
         <>
-          {replies.map((reply, index) => (
-            <div
-              key={reply._id}
-              ref={index === replies.length - 1 ? lastReplyRef : null}
-            >
+          {replies.map((reply) => (
+            <div key={reply._id}>
               <NodeItem node={reply} onReply={onReply} depth={1} />
             </div>
           ))}
