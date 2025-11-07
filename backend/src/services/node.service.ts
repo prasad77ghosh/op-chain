@@ -220,7 +220,7 @@ export class NodeService {
         .select(
           "_id parentId rootId operation rightValue result authorId status createdAt"
         )
-        .populate("authorId", "username")
+        .populate("authorId", "name email")
         .lean()
         .exec();
 
