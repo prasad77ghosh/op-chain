@@ -1,5 +1,4 @@
 version: "3.9"
-
 services:
   express-app:
     build:
@@ -39,6 +38,23 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  frontend-app:
+    build:
+      context: ./frontend
+    container_name: vite_react_app_dev
+    command: npm run dev
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - express-app
+    networks:
+      - backend-network
 
 volumes:
   mongo_data:
