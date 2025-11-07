@@ -3,7 +3,12 @@ import { User } from "../types/user";
 
 const userSchema = new Schema<User, Model<User>>(
   {
-    username: {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
       type: String,
       required: true,
       unique: true,
@@ -24,6 +29,10 @@ const userSchema = new Schema<User, Model<User>>(
       default: "user",
     },
     createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
       type: Date,
       default: Date.now,
     },

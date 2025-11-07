@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Conflict, NotAcceptable } from "http-errors";
 import { fieldValidateError } from "../helper";
 import { AuthService } from "../services/auth.service";
+import { AuthRequest } from "../types/auth";
 
 export class AuthController {
   async register(req: Request, res: Response, next: NextFunction) {
@@ -57,7 +58,6 @@ export class AuthController {
       res.status(200).json({
         success: true,
         msg: "Login successful",
-        data: user,
       });
     } catch (error) {
       next(error);
@@ -91,7 +91,26 @@ export class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response, next: NextFunction) {
+   async getProfile(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const userId = req.payload?.userId;
+      if (!userId) {
+        return res.status(401).json({ success: false, msg: "Unauthorized" });
+      }
+
+      const user = await AuthService.getProfile(userId);
+
+      res.status(200).json({
+        success: true,
+        msg: "Profile fetched successfully",
+        data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async logout(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       res.clearCookie("access_token", {
         httpOnly: true,

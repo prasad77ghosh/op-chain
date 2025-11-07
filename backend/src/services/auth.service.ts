@@ -30,11 +30,14 @@ export class AuthService {
       password: hashPassword,
     });
 
-    return user;
+    return {
+      name:user?.name,
+      email:user?.email
+    };
   }
 
   static async login({ email, password }: LoginData) {
-    const user = await UserSchema.findOne({ email });
+    const user = await UserSchema.findOne({ email }).select("+password");
     if (!user) throw new NotFound("User not found");
 
     const isPasswordValid =
@@ -61,5 +64,12 @@ export class AuthService {
     const payload = { userId: decoded.userId, email: decoded.email };
     const accessToken = jwtService.generateAccessToken(payload);
     return { accessToken };
+  }
+  
+  static async getProfile(userId: string) {
+    const user = await UserSchema.findById(userId).select("-password -__v");
+    if (!user) throw new NotFound("User not found");
+
+    return user;
   }
 }

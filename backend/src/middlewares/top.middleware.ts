@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import express, { Application, NextFunction, Request, Response } from "express";
 
 class TopMiddleWare {
@@ -6,6 +7,7 @@ class TopMiddleWare {
     app.use(express.urlencoded({ extended: true }));
     app.use(this.allowCrossDomain);
     app.use(this.cacheClear);
+    app.use(cookieParser());
   }
 
   private allowCrossDomain(req: Request, res: Response, next: NextFunction) {
