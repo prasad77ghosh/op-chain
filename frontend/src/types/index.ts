@@ -6,7 +6,7 @@ export interface Node {
   operation: '+' | '-' | '*' | '/' | null;
   rightValue?: number;
   result: number;
-  authorId: { _id: string; username: string };
+  authorId: { _id: string; name: string };
   status: 'confirmed' | 'pending' | 'rejected';
   createdAt: string;
 }

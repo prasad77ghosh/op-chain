@@ -1,8 +1,6 @@
+import { useAuthStore } from "@/store/useAuthStore";
 import type { Root } from "@/types";
 import { User, Plus } from "lucide-react";
-// import { Button } from "../ui/button";
-// import { useTreeStore } from "@/store/useNodeStore";
-// import { api } from "@/api/node-api";
 
 export const RootNodeCard = ({
   rootNode,
@@ -11,19 +9,7 @@ export const RootNodeCard = ({
   rootNode: Root;
   handleReply: (node: Root) => void;
 }) => {
-  // const { setLoadingTree, setTreeData } = useTreeStore();
-
-  // const loadTree = async (rootId: string) => {
-  //   setLoadingTree(true);
-  //   try {
-  //     const data = await api.getTree(rootId);
-  //     setTreeData(data.rootNode, data.nodes, data.nextCursor, data.hasMore);
-  //   } catch (error) {
-  //     console.error("Error loading tree:", error);
-  //   } finally {
-  //     setLoadingTree(false);
-  //   }
-  // };
+  const { user } = useAuthStore();
   return (
     <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 text-white shadow-lg p-6">
       {/* Subtle gradient overlay for depth */}
@@ -62,9 +48,10 @@ export const RootNodeCard = ({
 
         {/* Reply Button */}
         <div className="pt-2 flex items-center gap-2">
-          <button
-            onClick={() => handleReply(rootNode)}
-            className="
+          {user && user?._id && (
+            <button
+              onClick={() => handleReply(rootNode)}
+              className="
               bg-white 
               text-blue-600 
               px-5 py-2.5 
@@ -76,17 +63,11 @@ export const RootNodeCard = ({
               flex items-center justify-center gap-2 
               shadow-sm hover:shadow-md
             "
-          >
-            <Plus className="w-4 h-4" />
-            Add Reply
-          </button>
-
-          {/* <Button
-            className="cursor-pointer"
-            onClick={() => loadTree(rootNode._id)}
-          >
-            show full tree
-          </Button> */}
+            >
+              <Plus className="w-4 h-4" />
+              Add Reply
+            </button>
+          )}
         </div>
       </div>
     </div>

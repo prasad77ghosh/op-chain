@@ -1,4 +1,5 @@
 import { api } from "@/api/node-api";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useTreeStore } from "@/store/useNodeStore";
 import type { Node } from "@/types";
 import { ChevronRight, Loader2, Plus, User } from "lucide-react";
@@ -20,16 +21,14 @@ export const NodeItem = ({
     loadingReplies,
   } = useTreeStore();
 
+  const { user } = useAuthStore();
+
   const isExpanded = expandedNodes.has(node._id);
   const replies = nodeReplies[node._id] || [];
   const hasMore = hasMoreReplies[node._id];
   const isLoading = loadingReplies[node._id];
 
-  /** ======================
-   * Load replies (on expand)
-   ======================= */
   const handleToggleReplies = async () => {
-    // Collapse if already expanded
     if (isExpanded) {
       toggleNode(node._id);
       return;
@@ -37,17 +36,18 @@ export const NodeItem = ({
 
     toggleNode(node._id); // Expand first
 
-    // Load replies only once if not fetched yet
     if (replies.length === 0) {
       useTreeStore.getState().setLoadingReplies(node._id, true);
       try {
         const data = await api.getReplies(node._id);
-        useTreeStore.getState().setNodeReplies(
-          node._id,
-          data.replies,
-          data.nextCursor,
-          data.hasMore
-        );
+        useTreeStore
+          .getState()
+          .setNodeReplies(
+            node._id,
+            data.replies,
+            data.nextCursor,
+            data.hasMore
+          );
       } catch (error) {
         console.error("Error loading replies:", error);
       } finally {
@@ -56,9 +56,6 @@ export const NodeItem = ({
     }
   };
 
-  /** ======================
-   * Load more replies button
-   ======================= */
   const loadMoreReplies = async () => {
     const cursor = useTreeStore.getState().repliesCursors[node._id];
     if (!hasMore || isLoading || !cursor) return;
@@ -66,12 +63,9 @@ export const NodeItem = ({
     useTreeStore.getState().setLoadingReplies(node._id, true);
     try {
       const data = await api.getReplies(node._id, cursor);
-      useTreeStore.getState().addNodeReplies(
-        node._id,
-        data.replies,
-        data.nextCursor,
-        data.hasMore
-      );
+      useTreeStore
+        .getState()
+        .addNodeReplies(node._id, data.replies, data.nextCursor, data.hasMore);
     } catch (error) {
       console.error("Error loading more replies:", error);
     } finally {
@@ -79,9 +73,6 @@ export const NodeItem = ({
     }
   };
 
-  /** ======================
-   * Operation styling
-   ======================= */
   const getOperationColor = (op: string) => {
     switch (op) {
       case "+":
@@ -97,19 +88,14 @@ export const NodeItem = ({
     }
   };
 
-  /** ======================
-   * RENDER
-   ======================= */
   return (
     <div className="mb-2" style={{ marginLeft: `${depth * 20}px` }}>
-      {/* Node Card */}
       <div className="bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors">
-        {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-gray-400" />
             <span className="text-sm text-gray-600">
-              {node.authorId?.username || "Unknown"}
+              {node.authorId?.name || "Unknown"}
             </span>
           </div>
           <span className="text-xs text-gray-400">
@@ -117,11 +103,14 @@ export const NodeItem = ({
           </span>
         </div>
 
-        {/* Math Operation Display */}
         {node.operation && (
           <div className="mb-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium">
-              <span className={`px-2 py-1 rounded ${getOperationColor(node.operation)}`}>
+              <span
+                className={`px-2 py-1 rounded ${getOperationColor(
+                  node.operation
+                )}`}
+              >
                 {node.leftValue} {node.operation} {node.rightValue}
               </span>
               <span className="text-gray-400">=</span>
@@ -137,18 +126,22 @@ export const NodeItem = ({
             className="text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1"
           >
             <ChevronRight
-              className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+              className={`w-3 h-3 transition-transform ${
+                isExpanded ? "rotate-90" : ""
+              }`}
             />
             Replies
           </button>
 
-          <button
-            onClick={() => onReply(node)}
-            className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
-          >
-            <Plus className="w-3 h-3" />
-            Add Reply
-          </button>
+          {user && user._id && (
+            <button
+              onClick={() => onReply(node)}
+              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" />
+              Add Reply
+            </button>
+          )}
         </div>
       </div>
 

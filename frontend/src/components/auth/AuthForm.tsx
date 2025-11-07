@@ -44,7 +44,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
       success = await login(formData);
       if (success) {
         toast.success("You are logged in successfully!");
-        navigate("/profile");
+        navigate("/");
       }
     }
   };

@@ -57,12 +57,20 @@ export const useTreeStore = create<TreeState>((set) => ({
       return { expandedNodes: newExpanded };
     }),
 
-  setNodeReplies: (parentId, replies, cursor, hasMore) =>
-    set((state) => ({
-      nodeReplies: { ...state.nodeReplies, [parentId]: replies },
-      repliesCursors: { ...state.repliesCursors, [parentId]: cursor },
-      hasMoreReplies: { ...state.hasMoreReplies, [parentId]: hasMore },
-    })),
+
+    setNodeReplies: (parentId, replies, cursor, hasMore) =>
+  set((state) => ({
+    nodeReplies: { ...state.nodeReplies, [parentId]: replies },
+    repliesCursors: { ...state.repliesCursors, [parentId]: cursor },
+    hasMoreReplies: { ...state.hasMoreReplies, [parentId]: hasMore },
+  })),
+
+  // setNodeReplies: (parentId, replies, cursor, hasMore) =>
+  //   set((state) => ({
+  //     nodeReplies: { ...state.nodeReplies, [parentId]: replies },
+  //     repliesCursors: { ...state.repliesCursors, [parentId]: cursor },
+  //     hasMoreReplies: { ...state.hasMoreReplies, [parentId]: hasMore },
+  //   })),
 
   addNodeReplies: (parentId, replies, cursor, hasMore) =>
     set((state) => ({
@@ -80,21 +88,35 @@ export const useTreeStore = create<TreeState>((set) => ({
     })),
 
   addNewRoot: (root) => set((state) => ({ roots: [root, ...state.roots] })),
+
   addNewNode: (node) =>
     set((state) => {
-      // ✅ If replying directly to the root (no parentId)
       if (!node.parentId) {
         return { treeNodes: [node, ...state.treeNodes] };
       }
 
-      // ✅ If replying to a child node
       return {
         nodeReplies: {
           ...state.nodeReplies,
-          [node.parentId]: [...(state.nodeReplies[node.parentId] || []), node],
+          [node.parentId]: [node, ...(state.nodeReplies[node.parentId] || [])],
         },
       };
     }),
+  // addNewNode: (node) =>
+  //   set((state) => {
+  //     // ✅ If replying directly to the root (no parentId)
+  //     if (!node.parentId) {
+  //       return { treeNodes: [node, ...state.treeNodes] };
+  //     }
+
+  //     // ✅ If replying to a child node
+  //     return {
+  //       nodeReplies: {
+  //         ...state.nodeReplies,
+  //         [node.parentId]: [...(state.nodeReplies[node.parentId] || []), node],
+  //       },
+  //     };
+  //   }),
   reset: () =>
     set({
       selectedRoot: null,
