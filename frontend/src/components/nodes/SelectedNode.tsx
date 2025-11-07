@@ -1,8 +1,8 @@
 import type { Root } from "@/types";
 import { User, Plus } from "lucide-react";
-import { Button } from "../ui/button";
-import { useTreeStore } from "@/store/useNodeStore";
-import { api } from "@/api/node-api";
+// import { Button } from "../ui/button";
+// import { useTreeStore } from "@/store/useNodeStore";
+// import { api } from "@/api/node-api";
 
 export const RootNodeCard = ({
   rootNode,
@@ -11,19 +11,19 @@ export const RootNodeCard = ({
   rootNode: Root;
   handleReply: (node: Root) => void;
 }) => {
-  const { setLoadingTree, setTreeData } = useTreeStore();
+  // const { setLoadingTree, setTreeData } = useTreeStore();
 
-  const loadTree = async (rootId: string) => {
-    setLoadingTree(true);
-    try {
-      const data = await api.getTree(rootId);
-      setTreeData(data.rootNode, data.nodes, data.nextCursor, data.hasMore);
-    } catch (error) {
-      console.error("Error loading tree:", error);
-    } finally {
-      setLoadingTree(false);
-    }
-  };
+  // const loadTree = async (rootId: string) => {
+  //   setLoadingTree(true);
+  //   try {
+  //     const data = await api.getTree(rootId);
+  //     setTreeData(data.rootNode, data.nodes, data.nextCursor, data.hasMore);
+  //   } catch (error) {
+  //     console.error("Error loading tree:", error);
+  //   } finally {
+  //     setLoadingTree(false);
+  //   }
+  // };
   return (
     <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 text-white shadow-lg p-6">
       {/* Subtle gradient overlay for depth */}

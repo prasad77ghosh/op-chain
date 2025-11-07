@@ -1,21 +1,18 @@
 import React from "react";
 import { RootNodeCard } from "./SelectedNode";
 import { useTreeStore } from "@/store/useNodeStore";
-import type { Node, Root } from "@/types";
+import type { Node, ReplyParent, Root } from "@/types";
 import TreeNodesSection from "./NodeTreeSecion";
 import RootRepliesSection from "./RootRepliesSection";
 
 interface RightBarProps {
-  replyParent: Node | null;
-  showCreateReply: boolean;
-  setShowCreateReply: (val: boolean) => void;
-  setReplyParent: (node: Node | Root) => void;
+  setShowCreateReply: React.Dispatch<React.SetStateAction<boolean>>;
+  setReplyParent: React.Dispatch<React.SetStateAction<ReplyParent>>;
 }
-
-const RightBar: React.FC<RightBarProps> = ({
+const RightBar = ({
   setReplyParent,
   setShowCreateReply,
-}) => {
+}:RightBarProps) => {
   const { selectedRoot, treeNodes } = useTreeStore();
 
   const handleReply = (node: Node | Root) => {

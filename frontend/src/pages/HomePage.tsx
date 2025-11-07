@@ -5,6 +5,7 @@ import LeftBar from "@/components/nodes/LeftBar";
 import RightBar from "@/components/nodes/RIghtBar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTreeStore } from "@/store/useNodeStore";
+import type { ReplyParent } from "@/types";
 import { Calculator, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -14,7 +15,7 @@ export default function MathTreeApp() {
   const { user } = useAuthStore();
   const [showCreateRoot, setShowCreateRoot] = useState(false);
   const [showCreateReply, setShowCreateReply] = useState(false);
-  const [replyParent, setReplyParent] = useState(null);
+  const [replyParent, setReplyParent] = useState<ReplyParent>(null);
 
   useEffect(() => {
     loadRoots();

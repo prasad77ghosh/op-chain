@@ -60,3 +60,6 @@ export interface TreeState {
   
   reset: () => void;
 }
+
+
+export type ReplyParent = Node | Root | null;
