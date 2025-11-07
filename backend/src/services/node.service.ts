@@ -58,13 +58,13 @@ export class NodeService {
       $match: { parentId: null },
     };
 
-    // If a cursor is provided, only fetch documents created before it
     if (cursor) {
       matchStage.$match.createdAt = { $lt: new Date(cursor) };
     }
 
     const pipeline: PipelineStage[] = [
       matchStage,
+      // Lookup all nodes with same rootId to count replies
       {
         $lookup: {
           from: "nodes",
@@ -75,12 +75,15 @@ export class NodeService {
       },
       {
         $addFields: {
-          replyCount: { $subtract: [{ $size: "$children" }, 1] },
+          replyCount: {
+            $max: [{ $subtract: [{ $size: "$children" }, 1] }, 0],
+          },
         },
       },
+      // Fetch author info
       {
         $lookup: {
-          from: "users",
+          from: "users", // make sure this matches your actual Mongo collection name
           localField: "authorId",
           foreignField: "_id",
           as: "author",
@@ -95,28 +98,24 @@ export class NodeService {
       {
         $project: {
           _id: 1,
-          rootId: 1,
           leftValue: 1,
           result: 1,
           replyCount: 1,
           createdAt: 1,
           "author._id": 1,
-          "author.username": 1,
+          "author.name": 1,
+          "author.email": 1, // include email if needed
+          "author.avatar": 1, // or avatar if you have one
         },
       },
       { $sort: { createdAt: -1 } },
-      { $limit: limit + 1 }, // fetch one extra to determine if there’s a next page
+      { $limit: limit + 1 },
     ];
 
     const roots = await NodeSchema.aggregate(pipeline);
 
-    // Determine if there’s a next page
     const hasNextPage = roots.length > limit;
-
-    // Remove the extra fetched item
     const paginatedRoots = hasNextPage ? roots.slice(0, -1) : roots;
-
-    // Next cursor will be the createdAt of the last item
     const nextCursor = hasNextPage
       ? paginatedRoots[paginatedRoots.length - 1].createdAt
       : null;
@@ -194,7 +193,7 @@ export class NodeService {
     };
   }
 
-  static async getReplies(
+  static async getRepliesFast(
     parentId: string,
     cursor?: string,
     limit: number = 10
@@ -203,53 +202,51 @@ export class NodeService {
       throw new Error("Invalid parentId");
     }
 
-    const queryLimit = Math.min(limit, 100);
-    const query: any = { parentId: new mongoose.Types.ObjectId(parentId) };
-
-    // Apply cursor for pagination
-    if (cursor && mongoose.Types.ObjectId.isValid(cursor)) {
-      query._id = { $gt: new mongoose.Types.ObjectId(cursor) };
-    }
-
-    // Fetch replies
-    const replies: any = await NodeSchema.find(query)
-      .sort({ _id: 1 })
-      .limit(queryLimit)
-      .select(
-        "_id parentId rootId operation rightValue result authorId status createdAt"
-      )
-      .populate("authorId", "username")
-      .lean();
-
-    if (!replies.length) {
-      return {
-        message: "No more replies",
-        parentId,
-        totalReplies: 0,
-        replies: [],
-        count: 0,
-        nextCursor: null,
-        hasMore: false,
-      };
-    }
-
-    // Next cursor logic
-    const nextCursor =
-      replies.length === queryLimit ? replies[replies.length - 1]._id : null;
-
-    // Optional total count
-    const totalReplies = await NodeSchema.countDocuments({
+    const queryLimit = Math.min(Math.max(limit, 1), 100);
+    const query: any = {
       parentId: new mongoose.Types.ObjectId(parentId),
-    });
-
-    return {
-      message: "Replies fetched successfully",
-      parentId,
-      totalReplies,
-      replies,
-      count: replies.length,
-      nextCursor,
-      hasMore: Boolean(nextCursor),
     };
+
+    if (cursor) {
+      if (!mongoose.Types.ObjectId.isValid(cursor)) {
+        throw new Error("Invalid cursor");
+      }
+      query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+    }
+
+    try {
+      const replies = await NodeSchema.find(query)
+        .sort({ _id: -1 })
+        .limit(queryLimit + 1)
+        .select(
+          "_id parentId rootId operation rightValue result authorId status createdAt"
+        )
+        .populate("authorId", "username")
+        .lean()
+        .exec();
+
+      const hasMore = replies.length > queryLimit;
+      const slicedReplies:any = hasMore ? replies.slice(0, queryLimit) : replies;
+      const nextCursor =
+        hasMore && slicedReplies.length > 0
+          ? slicedReplies[slicedReplies.length - 1]._id.toString()
+          : null;
+
+      return {
+        success: true,
+        message:
+          slicedReplies.length > 0
+            ? "Replies fetched successfully"
+            : "No more replies",
+        parentId,
+        replies: slicedReplies.reverse(),
+        count: slicedReplies.length,
+        nextCursor,
+        hasMore,
+      };
+    } catch (error) {
+      console.error("Error fetching replies:", error);
+      throw new Error("Failed to fetch replies");
+    }
   }
 }

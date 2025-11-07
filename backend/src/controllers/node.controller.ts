@@ -94,7 +94,7 @@ export class NodeController {
       fieldValidateError(req);
       const { parentId }: any = req.params;
       const { cursor, limit } = req.query;
-      const result = await NodeService.getReplies(
+      const result = await NodeService.getRepliesFast(
         parentId,
         cursor as string | undefined,
         parseInt(limit as string, 10) || 10
