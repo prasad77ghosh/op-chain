@@ -203,20 +203,19 @@ export class NodeService {
     }
 
     const queryLimit = Math.min(Math.max(limit, 1), 100);
-    const query: any = {
-      parentId: new mongoose.Types.ObjectId(parentId),
-    };
+    const query: any = { parentId: new mongoose.Types.ObjectId(parentId) };
 
     if (cursor) {
       if (!mongoose.Types.ObjectId.isValid(cursor)) {
         throw new Error("Invalid cursor");
       }
+      // For descending order, we use $lt (older than cursor)
       query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
     }
 
     try {
       const replies = await NodeSchema.find(query)
-        .sort({ _id: -1 })
+        .sort({ _id: -1 }) // newest first
         .limit(queryLimit + 1)
         .select(
           "_id parentId rootId operation rightValue result authorId status createdAt"
@@ -226,7 +225,9 @@ export class NodeService {
         .exec();
 
       const hasMore = replies.length > queryLimit;
-      const slicedReplies:any = hasMore ? replies.slice(0, queryLimit) : replies;
+      const slicedReplies: any = hasMore
+        ? replies.slice(0, queryLimit)
+        : replies;
       const nextCursor =
         hasMore && slicedReplies.length > 0
           ? slicedReplies[slicedReplies.length - 1]._id.toString()
@@ -239,7 +240,7 @@ export class NodeService {
             ? "Replies fetched successfully"
             : "No more replies",
         parentId,
-        replies: slicedReplies.reverse(),
+        replies: slicedReplies, // ✅ do NOT reverse
         count: slicedReplies.length,
         nextCursor,
         hasMore,

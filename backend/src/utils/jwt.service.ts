@@ -4,7 +4,7 @@ export class JwtService {
   private accessSecret: Secret = (process.env.JWT_ACCESS_SECRET ?? "access_secret") as Secret;
   private refreshSecret: Secret = (process.env.JWT_REFRESH_SECRET ?? "refresh_secret") as Secret;
 
-  private readonly accessExpiry = "15m" as const;
+  private readonly accessExpiry = "15d" as const;
   private readonly refreshExpiry = "7d" as const;
 
   generateAccessToken(payload: object): string {
